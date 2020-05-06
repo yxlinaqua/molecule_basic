@@ -124,7 +124,7 @@ class MolData:
             n_lines.append(i_l+2+iicol+skiplines)
             ntrans = int(lines[i_l+5+iicol+skiplines])
             skiplines = 8+ntrans+skiplines
-        n_lines.append(n_lines[-1]+8+ntrans)
+        n_lines.append(n_lines[-1]+9+ntrans)
         n_lines = np.array(n_lines)
         lineblocks = []
         for i_l, nline in enumerate(n_lines[:-1]):
@@ -179,10 +179,12 @@ if __name__ == "__main__":
     efac = (1*u.eV).cgs.value*0.000123986
     k = cons.k_B.cgs.value
 
-    mole = '12co'
+    mole = 'ch3cn'
     #mole = 'ech3oh'
-
+    mole = 'co'
+    moldata_path = '/Users/yuxinlin/radex/data/ch3cn.dat'
     moldata_path = '/Users/yuxinlin/radex/data/12co.dat'
+
     #moldata_path = '/Users/yuxinlin/radex/data/e-ch3oh.dat'
 
 
@@ -194,10 +196,10 @@ if __name__ == "__main__":
     low = 6
 
     #for complex levels, string format e.g.
-    #up = '7_5'
-    #low = '6_5'
+    #up = '9_0'
+    #low = '8_0'
 
-    Tkin = 60.
+    Tkin = 50.
     tau = 0.1
     ncrit = ncrit_cal(moldata, low, up)
     for n in ncrit.items():
