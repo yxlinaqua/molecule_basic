@@ -89,9 +89,9 @@ class MolData:
         # cut \n tails
         lines = [_[:-1] for _ in lines]
         
-        assert re.search('MOLECULE',lines[0], re.I) is not None 
+        assert re.search('MOLECULE',lines[0], re.I), "@ylin: Perhaps need to check data format manually!"
 
-        lineblocks = self.splitLines(lines)
+        lineblocks = self.splitLines_new(lines)
         self.hd0 = HeadBlock(lineblocks[0])
         self.hd1 = HeadBlock(lineblocks[1])
         
@@ -105,34 +105,32 @@ class MolData:
         self.data_loaded = True
         return self
 
-    def splitLines(self, lines):
+    def splitLines_new(self, lines):
+    
 
-        keywords = [
-    	['NUMBER OF ENERGY LEVELS'],\
-    	['NUMBER OF RADIATIVE TRANSITIONS'],\
-    	['NUMBER OF COLLISION PARTNERS','NUMBER OF COLL PARTNERS'],\
-    	['COLLISIONS BETWEEN', '! COLLISION PARTNER']]
-        
-      #   keywords = [
-    	 # 'NUMBER OF ENERGY LEVELS',\
-    	 # 'NUMBER OF RADIATIVE TRANSITIONS',\
-    	 # 'NUMBER OF COLL PARTNERS',\
-    	 # 'COLLISIONS BETWEEN']
-            
-        n_lines = []
-        for i_k, keyword in enumerate(keywords):
-            for i_l, line in enumerate(lines):
-                iskwexi = any([k in line.upper() or k in line.lower() for k in keyword]) 
-                if iskwexi:
-                    n_lines.append(i_l)
+        nlevels = int(lines[5])    
+        n_lines = [4, nlevels+7]
+        ntrans_simul = int(lines[nlevels+8])
+
+        i_l = nlevels+10+ntrans_simul
+        n_lines.append(i_l)
+        ncols = int(lines[i_l+1])
+
+        assert re.search('NUMBER OF COLL',lines[i_l], re.I), "@ylin: Perhaps need to check data format manually!"
+
+
+        skiplines = 0
+        for iicol, icol in enumerate(range(ncols)):
+            n_lines.append(i_l+2+iicol+skiplines)
+            ntrans = int(lines[i_l+5+iicol+skiplines])
+            skiplines = 8+ntrans+skiplines
+        n_lines.append(n_lines[-1]+8+ntrans)
         n_lines = np.array(n_lines)
-                    #break
         lineblocks = []
         for i_l, nline in enumerate(n_lines[:-1]):
             lineblocks.append(lines[nline:n_lines[i_l+1]])
-        lineblocks.append(lines[n_lines[i_l+1]:])
+        #lineblocks.append(lines[n_lines[i_l+1]:])
         return lineblocks
-
 
     def getData(self, n):
     	return self.df[n]
@@ -180,26 +178,26 @@ if __name__ == "__main__":
     #constants Energy cm^-1 to cgs
     efac = (1*u.eV).cgs.value*0.000123986
     k = cons.k_B.cgs.value
-    mole = 'ech3oh'
-    #mole = 'cs'
-    #mole = 'ch3cn'
-    moldata_path = '/Users/yuxinlin/radex/data/e-ch3oh.dat'
-    #moldata_path = '/Users/yuxinlin/radex/data/cs.dat'
-    #moldata_path = '/Users/yuxinlin/radex/data/ch3cn.dat'
+
+    mole = '12co'
+    #mole = 'ech3oh'
+
+    moldata_path = '/Users/yuxinlin/radex/data/12co.dat'
+    #moldata_path = '/Users/yuxinlin/radex/data/e-ch3oh.dat'
+
 
     moldata = MolData(moldata_path)
     moldata = moldata.load_data()
 
-    #transition in consideration
-    up = '5_-3'
-    low = '4_-3'
-    #up = '9_0'
-    #low = '8_0'
-    #up = 7
-    #low = 6
 
-    #condition
-    Tkin = 50.
+    up = 7
+    low = 6
+
+    #for complex levels, string format e.g.
+    #up = '7_5'
+    #low = '6_5'
+
+    Tkin = 60.
     tau = 0.1
     ncrit = ncrit_cal(moldata, low, up)
     for n in ncrit.items():
